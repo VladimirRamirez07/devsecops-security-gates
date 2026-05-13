@@ -1,40 +1,55 @@
-# WARNING: Este código contiene vulnerabilidades intencionales para demostración
+# SECURE VERSION - All vulnerabilities from main branch have been fixed
 
 import sqlite3
 import subprocess
 import hashlib
-import pickle
 import os
+import shlex
 
-# VULN 1: SQL Injection
+# ✅ FIX 1: SQL Injection → usar parametrized queries
 def get_user(username):
     conn = sqlite3.connect("users.db")
     cursor = conn.cursor()
-    query = "SELECT * FROM users WHERE username = '" + username + "'"
-    cursor.execute(query)
+    query = "SELECT * FROM users WHERE username = ?"
+    cursor.execute(query, (username,))
     return cursor.fetchall()
 
-# VULN 2: Command Injection
+# ✅ FIX 2: Command Injection → evitar shell=True y sanitizar input
 def ping_host(host):
-    result = subprocess.run("ping -c 1 " + host, shell=True, capture_output=True)
+    allowed_hosts = ["localhost", "127.0.0.1"]
+    if host not in allowed_hosts:
+        raise ValueError("Host not allowed")
+    result = subprocess.run(
+        ["ping", "-c", "1", host],
+        shell=False,
+        capture_output=True
+    )
     return result.stdout
 
-# VULN 3: Hash debil (MD5)
+# ✅ FIX 3: Hash débil → usar bcrypt/sha256
 def hash_password(password):
-    return hashlib.md5(password.encode()).hexdigest()
+    salt = os.urandom(32)
+    key = hashlib.pbkdf2_hmac(
+        'sha256',
+        password.encode('utf-8'),
+        salt,
+        100000
+    )
+    return salt + key
 
-# VULN 4: Deserializacion insegura
+# ✅ FIX 4: Deserialización insegura → usar json
+import json
 def load_session(data):
-    return pickle.loads(data)
+    return json.loads(data)
 
-# VULN 5: Hardcoded secret
-SECRET_KEY = "super-secret-password-123"
-DB_PASSWORD = "admin1234"
+# ✅ FIX 5: Hardcoded secrets → usar variables de entorno
+SECRET_KEY = os.environ.get("SECRET_KEY")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
 
 def main():
-    print("App running...")
+    print("Secure app running...")
     print(get_user("admin"))
-    print(hash_password("mypassword"))
+    print(hash_password("mypassword").hex())
 
 if __name__ == "__main__":
     main()
