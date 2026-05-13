@@ -1,0 +1,2 @@
+# Este archivo existe para demostrar que Trivy puede ser configurado
+# En producción real se ignorarían falsos positivos documentados
