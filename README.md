@@ -19,6 +19,10 @@
 
 This project demonstrates a real-world **DevSecOps pipeline** using GitHub Actions with automated security gates. It integrates 5 industry-standard security tools running in parallel on every push or pull request, blocking merges automatically when critical vulnerabilities are found.
 
+The project includes two branches to demonstrate the **full DevSecOps cycle**:
+- `main` — intentionally vulnerable code (pipeline detects and blocks)
+- `develop` — remediated code (pipeline passes all checks ✅)
+
 ---
 
 ## 🛠️ Security Stack
@@ -52,37 +56,59 @@ flowchart TD
     H -->|Critical found| J[🚫 Merge Blocked]
 ```
 
-## 🚨 Vulnerabilities Detected
+---
 
-The pipeline intentionally detects the following vulnerabilities in the demo code:
+## 🔄 Branch Strategy
 
-| Vulnerability | Location | Severity |
-|---|---|---|
-| SQL Injection | `src/app.py` line 14 | 🔴 High |
-| Command Injection | `src/app.py` line 20 | 🔴 High |
-| Weak Hashing (MD5) | `src/app.py` line 25 | 🟡 Medium |
-| Insecure Deserialization | `src/app.py` line 29 | 🔴 High |
-| Hardcoded Secrets | `src/app.py` line 32-33 | 🔴 High |
-| Outdated Dependencies | `src/requirements.txt` | 🔴 Critical CVEs |
-| Container CVEs | `docker/Dockerfile` | 🔴 Critical |
+| Branch | Code | Pipeline | Purpose |
+|---|---|---|---|
+| `main` | ❌ Vulnerable | 🔴 Blocked | Demonstrates threat detection |
+| `develop` | ✅ Secure | ✅ Passed | Demonstrates remediation |
 
 ---
 
-## 📊 Pipeline Results
+## 🚨 Vulnerabilities Detected in `main`
 
-| Scanner | Findings | Severity | Status |
+| Vulnerability | Location | Tool | Severity |
 |---|---|---|---|
-| Semgrep | 3 | Blocking | 🔴 Blocked |
-| Bandit | 4 | 2 High, 2 Medium | 🔴 Blocked |
-| TruffleHog | 0 | — | ✅ Passed |
-| Snyk | 0 | — | ✅ Passed |
-| Trivy | CVE-2026-24049 | Critical | 🔴 Blocked |
+| SQL Injection | `src/app.py` line 14 | Semgrep + Bandit | 🔴 High |
+| Command Injection | `src/app.py` line 20 | Semgrep + Bandit | 🔴 High |
+| Weak Hashing (MD5) | `src/app.py` line 25 | Semgrep + Bandit | 🟡 Medium |
+| Insecure Deserialization | `src/app.py` line 29 | Bandit | 🔴 High |
+| Hardcoded Secrets | `src/app.py` line 32-33 | Semgrep | 🔴 High |
+| Outdated Dependencies | `src/requirements.txt` | Snyk | 🔴 Critical CVEs |
+| Container CVEs | `docker/Dockerfile` | Trivy | 🔴 Critical |
+
+---
+
+## ✅ Fixes Applied in `develop`
+
+| Vulnerability | Fix |
+|---|---|
+| SQL Injection | Parameterized queries |
+| Command Injection | Removed `shell=True`, input allowlist |
+| Weak Hashing | Replaced MD5 with `pbkdf2_hmac` + salt |
+| Insecure Deserialization | Replaced `pickle` with `json` |
+| Hardcoded Secrets | Moved to environment variables |
+| Outdated Dependencies | Updated to latest secure versions |
+| Container CVEs | Upgraded base image to `python:3.13-slim` |
+
+---
+
+## 📊 Pipeline Results Comparison
+
+| Scanner | `main` | `develop` |
+|---|---|---|
+| Semgrep | 🔴 3 blocking findings | ✅ Clean |
+| Bandit | 🔴 2 High, 2 Medium | ✅ Clean |
+| TruffleHog | ✅ Clean | ✅ Clean |
+| Snyk | ✅ Clean | ✅ Clean |
+| Trivy | 🔴 Critical CVEs | ✅ Clean |
+| **Security Gate** | 🔴 **Blocked** | ✅ **Passed** |
 
 ---
 
 ## 📁 Project Structure
-
-```
 devsecops-security-gates/
 │
 ├── .github/
@@ -90,19 +116,20 @@ devsecops-security-gates/
 │       └── security-pipeline.yml   # Main CI/CD pipeline
 │
 ├── src/
-│   ├── app.py                      # Intentionally vulnerable code (demo)
-│   └── requirements.txt            # Dependencies with known CVEs
+│   ├── app.py                      # Vulnerable (main) / Secure (develop)
+│   └── requirements.txt            # Outdated (main) / Updated (develop)
 │
 ├── docker/
 │   ├── Dockerfile                  # Docker image for container scanning
-│   └── .trivyignore                # Trivy configuration
+│   └── .trivyignore                # Documented unfixable OS CVEs
 │
+├── .trivyignore                    # Trivy ignore rules
 └── README.md
-```
+---
 
 ## ⚙️ How the Security Gate Works
 
-1. Every `push` or `pull request` to `main` triggers the pipeline
+1. Every `push` or `pull request` triggers the pipeline
 2. All 5 scanners run **in parallel** to save time
 3. If **Bandit** or **TruffleHog** detect critical issues → merge is **blocked**
 4. The **Security Gate** job only passes if all required checks succeed
@@ -146,11 +173,12 @@ trivy image devsecops-app
 
 ## 📚 What I Learned
 
-- Integrating multiple security scanners in a single CI/CD pipeline
+- Integrating 5 security scanners in a single CI/CD pipeline
 - Configuring automated security gates that block unsafe merges
-- Identifying and documenting OWASP Top 10 vulnerabilities
-- Container security scanning with Trivy
+- Identifying and remediating OWASP Top 10 vulnerabilities in Python
+- Container security scanning and CVE management with Trivy
 - Secret detection across git history with TruffleHog
+- Managing unfixable OS-level CVEs with documented exceptions
 
 ---
 
