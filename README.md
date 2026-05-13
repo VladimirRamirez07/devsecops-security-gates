@@ -34,30 +34,23 @@ This project demonstrates a real-world **DevSecOps pipeline** using GitHub Actio
 ---
 
 ## 🏗️ Pipeline Architecture
-Push / Pull Request → GitHub Actions
-│
-┌───────────────┼───────────────┐
-│               │               │
-┌──────▼──────┐ ┌──────▼──────┐ ┌─────▼──────┐
-│SAST-Semgrep │ │ SAST-Bandit │ │  TruffleHog│
-│ 1105 rules  │ │Python checks│ │Secret Scan │
-└──────┬──────┘ └──────┬──────┘ └─────┬──────┘
-│               │               │
-┌──────▼──────┐ ┌──────▼──────┐        │
-│    Snyk     │ │    Trivy    │        │
-│ Dependency  │ │  Container  │        │
-│   Scanning  │ │  Scanning   │        │
-└──────┬──────┘ └──────┬──────┘        │
-│               │               │
-└───────────────▼───────────────┘
-│
-┌───────▼───────┐
-│ Security Gate │
-│ Blocks merge  │
-│ on critical   │
-│  findings     │
-└───────────────┘
----
+
+```mermaid
+flowchart TD
+    A[Push / Pull Request] --> B[GitHub Actions]
+    B --> C[SAST - Semgrep\n1105 rules · OWASP Top 10]
+    B --> D[SAST - Bandit\nPython checks]
+    B --> E[Secret Scanning\nTruffleHog]
+    B --> F[SCA - Snyk\nDependency Scanning]
+    B --> G[Container Scan\nTrivy]
+    C --> H{Security Gate}
+    D --> H
+    E --> H
+    F --> H
+    G --> H
+    H -->|All passed| I[✅ Merge Allowed]
+    H -->|Critical found| J[🚫 Merge Blocked]
+```
 
 ## 🚨 Vulnerabilities Detected
 
@@ -88,18 +81,24 @@ The pipeline intentionally detects the following vulnerabilities in the demo cod
 ---
 
 ## 📁 Project Structure
+
+```
 devsecops-security-gates/
+│
 ├── .github/
 │   └── workflows/
 │       └── security-pipeline.yml   # Main CI/CD pipeline
+│
 ├── src/
 │   ├── app.py                      # Intentionally vulnerable code (demo)
 │   └── requirements.txt            # Dependencies with known CVEs
+│
 ├── docker/
 │   ├── Dockerfile                  # Docker image for container scanning
 │   └── .trivyignore                # Trivy configuration
+│
 └── README.md
----
+```
 
 ## ⚙️ How the Security Gate Works
 
