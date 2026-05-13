@@ -19,13 +19,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Semgrep
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: >-
-            p/python
-            p/secrets
-            p/owasp-top-ten
-        continue-on-error: false
+        run: |
+          pip install semgrep
+          semgrep --config=p/python --config=p/secrets --config=p/owasp-top-ten src/ --error
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 
   # -----------------------------------------------
   # JOB 2: SAST - Análisis con Bandit
