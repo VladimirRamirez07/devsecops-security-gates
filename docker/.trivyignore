@@ -1,2 +1,5 @@
-# Este archivo existe para demostrar que Trivy puede ser configurado
-# En producción real se ignorarían falsos positivos documentados
+# OS-level CVEs in debian:13 base image with no fix available yet
+# These are tracked and will be patched when upstream fixes are released
+# Ref: https://avd.aquasec.com/nvd/cve-2026-4878
+CVE-2026-4878
+CVE-2025-69720
