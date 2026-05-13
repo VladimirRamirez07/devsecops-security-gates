@@ -1,5 +1,9 @@
 # OS-level CVEs in debian base image with no fix available yet
-# These are tracked and will be patched when upstream fixes are released
 CVE-2026-4878
 CVE-2025-69720
 CVE-2026-29111
+
+# Pillow CVEs requiring version >12.x not yet available in PyPI
+CVE-2026-25990
+CVE-2026-40192
+CVE-2026-42311
