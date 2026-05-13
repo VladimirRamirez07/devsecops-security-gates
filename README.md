@@ -109,6 +109,8 @@ flowchart TD
 ---
 
 ## 📁 Project Structure
+
+```
 devsecops-security-gates/
 │
 ├── .github/
@@ -125,7 +127,7 @@ devsecops-security-gates/
 │
 ├── .trivyignore                    # Trivy ignore rules
 └── README.md
----
+```
 
 ## ⚙️ How the Security Gate Works
 
